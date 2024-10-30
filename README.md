@@ -31,7 +31,7 @@ This project analyzes personal fitness data from both Whoop (recovery/strain met
 
 bash
 Clone the repository
-git clone https://github.com/EngCaioFonseca/whoop-hevy-analysis.git
+git clone https://github.com/EngCaioFonseca/whoop_data_analysis.git
 Install required packages
 pip install -r requirements.txt
 
