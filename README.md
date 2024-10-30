@@ -147,6 +147,11 @@ The analysis generates various visualizations including:
 
 ![image](https://github.com/user-attachments/assets/decdb900-3164-4620-83d9-933a0e9150c9)
 
+![image](https://github.com/user-attachments/assets/256e0c4c-afcc-41c5-aa41-28103db77552)
+
+![image](https://github.com/user-attachments/assets/3bf14b39-96cd-4b8a-b718-67e47149a0aa)
+
+
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
