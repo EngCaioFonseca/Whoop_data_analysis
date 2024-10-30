@@ -937,3 +937,134 @@ analyze_hevy_workouts(df_hevy, workout_summary)
 
 # Combine Whoop and Hevy analysis
 merged_analysis = combine_whoop_and_hevy_analysis(df_physio, workout_summary)
+
+
+## Spyder Plots - Goal Vs current Scores
+def create_strength_progression_plot(df_hevy, body_weight=85):
+    # Define target goals based on body weight multipliers
+    targets = {
+        'Squat': body_weight * 2,      # 2x bodyweight
+        'Bench Press': body_weight * 1.5,  # 1.5x bodyweight
+        'Row': body_weight * 2,        # 2x bodyweight
+        'Deadlift': body_weight * 2.5,    # 2.5x bodyweight
+        'Power Clean': body_weight * 1.5   # 1.5x bodyweight
+    }
+    
+    # Get max weights for each exercise over time
+    exercise_progress = {}
+    for exercise in targets.keys():
+        # Create a list of possible variations of the exercise name
+        exercise_variations = [
+            exercise.lower(),
+            exercise.replace(' ', '').lower(),
+            f"{exercise.lower()} (barbell)",
+            f"barbell {exercise.lower()}"
+        ]
+        
+        # Filter for the specific exercise and its variations
+        exercise_data = df_hevy[
+            df_hevy['exercise_title'].str.lower().str.contains('|'.join(exercise_variations), na=False)
+        ]
+        
+        if not exercise_data.empty:
+            exercise_progress[exercise] = exercise_data.groupby(
+                exercise_data['start_time'].dt.date)['weight_kg'].max()
+    
+    if not exercise_progress:
+        print("No matching exercises found in the dataset.")
+        return
+    
+    # Get all unique dates
+    all_dates = sorted(list(set.union(*[set(prog.index) for prog in exercise_progress.values()])))
+    
+    if len(all_dates) < 2:
+        print("Not enough data points for progression analysis.")
+        return
+    
+    # Calculate time points ensuring we don't exceed the list length
+    n_points = 6  # 0%, 20%, 40%, 60%, 80%, 100%
+    time_points = []
+    for i in range(n_points):
+        idx = int((i * (len(all_dates) - 1)) / (n_points - 1))
+        time_points.append(all_dates[idx])
+    
+    # Get the max weights at each time point
+    progression_data = []
+    for date in time_points:
+        point_data = {}
+        for exercise in targets.keys():
+            if exercise in exercise_progress:
+                # Get the latest max weight up to this date
+                weights_up_to_date = exercise_progress[exercise][exercise_progress[exercise].index <= date]
+                if not weights_up_to_date.empty:
+                    point_data[exercise] = weights_up_to_date.max()
+                else:
+                    point_data[exercise] = 0
+            else:
+                point_data[exercise] = 0
+        progression_data.append(point_data)
+    
+    # Create the spider plot
+    categories = list(targets.keys())
+    n_categories = len(categories)
+    
+    # Set up the angles for the spider plot
+    angles = [n/float(n_categories)*2*np.pi for n in range(n_categories)]
+    angles += angles[:1]  # complete the circle
+    
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(12, 8), subplot_kw=dict(projection='polar'))
+    
+    # Plot target values
+    target_values = [targets[cat] for cat in categories]
+    target_values += target_values[:1]
+    ax.plot(angles, target_values, 'o-', linewidth=2, label='Target', color='red')
+    ax.fill(angles, target_values, alpha=0.25, color='red')
+    
+    # Colors for progression
+    colors = plt.cm.viridis(np.linspace(0, 1, len(progression_data)))
+    
+    # Plot progression data
+    for i, data in enumerate(progression_data):
+        values = [data[cat] for cat in categories]
+        values += values[:1]
+        ax.plot(angles, values, 'o-', linewidth=1, label=f'Progress {i*20}%', color=colors[i])
+        ax.fill(angles, values, alpha=0.1, color=colors[i])
+    
+    # Set the labels
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories)
+    
+    # Add legend
+    plt.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
+    
+    plt.title(f'Strength Progression Towards Goals (BW: {body_weight}kg)', pad=20)
+    plt.tight_layout()
+    plt.show()
+    
+    # Print progression details
+    print("\nProgression Details:")
+    print("Exercise      | Target (kg) | Current (kg) | % of Target")
+    print("-" * 55)
+    current_data = progression_data[-1]
+    for exercise in categories:
+        target = targets[exercise]
+        current = current_data[exercise]
+        percentage = (current / target) * 100
+        print(f"{exercise:<12} | {target:>10.1f} | {current:>11.1f} | {percentage:>10.1f}%")
+    
+    # Print exercise variations found
+    print("\nExercise names found in dataset:")
+    for exercise in targets.keys():
+        variations = df_hevy[df_hevy['exercise_title'].str.contains(exercise, case=False, na=False)]['exercise_title'].unique()
+        if len(variations) > 0:
+            print(f"\n{exercise}:")
+            for var in variations:
+                print(f"  - {var}")
+        else:
+            print(f"\n{exercise}: No matching exercises found")
+
+# Call the function
+create_strength_progression_plot(df_hevy, body_weight=85)
+
+
