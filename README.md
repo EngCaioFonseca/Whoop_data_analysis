@@ -165,7 +165,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - The Python data science community for excellent tools and libraries
 
 ## Contact
-Your Name - Caio Fonseca
+Caio Fonseca
 Project Link: [https://github.com/EngCaioFonseca/whoop-hevy-analysis](https://github.com/EngCaioFonseca/Whoop_data_analysis)
 
 
